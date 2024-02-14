@@ -3,131 +3,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Speak with ChatGPT</title>
-</head>
+    <title>Your Page Title</title>
+    </head>
 <body>
-    <label for="apiKey">Enter your OpenAI API Key:</label>
-    <input type="text" id="apiKey">
-    <br><br>
-    <button onclick="startListening()">Speak to ChatGPT</button>
-    <textarea id="txtOutput" rows="10" cols="50"></textarea>
-    <input type="hidden" id="txtMsg">
+    <h1>My Website</h1>
+    <p>Here's some introductory text...</p>
 
-    <script>
-        var isProcessingOrSpeaking = false;
-        var mymessages = [{"role": "system", "content": 'Hey chatgpt'}];
+    <iframe src="https://chat.openai.com" title="ChatGPT"></iframe>
 
-        function getAPIKey() {
-            return document.getElementById('apiKey').value.trim();
-        }
+    <p>This content appears below the iframe.</p>
 
-        function startListening() {
-            if(isProcessingOrSpeaking) {
-                console.log("ChatGPT is currently processing or speaking. Please wait.");
-                return;
-            }
-
-            if (!getAPIKey()) {
-                alert("Please enter your OpenAI API Key first.");
-                return;
-            }
-
-            if ('webkitSpeechRecognition' in window) {
-                var recognition = new webkitSpeechRecognition();
-                recognition.continuous = false; // Stop when user stops speaking
-                recognition.interimResults = true; // Get results while the user is speaking
-
-                recognition.onstart = function() {
-                    console.log('Speak now.');
-                };
-
-                recognition.onresult = function(event) {
-                    var interim_transcript = '';
-                    for (var i = event.resultIndex; i < event.results.length; ++i) {
-                        if (event.results[i].isFinal) {
-                            document.getElementById('txtMsg').value += event.results[i][0].transcript;
-                        } else {
-                            interim_transcript += event.results[i][0].transcript;
-                        }
-                    }
-
-                    if(document.getElementById('txtMsg').value !== '') {
-                        Send();
-                    }
-                };
-
-                recognition.onerror = function(event) {
-                    console.log('Error occurred in recognition: ' + event.error);
-                };
-
-                recognition.start();
-            } else {
-                alert("Your browser does not support speech recognition. Please try Google Chrome.");
-            }
-        }
-
-        function speakText(text) {
-            var synth = window.speechSynthesis;
-            var utterance = new SpeechSynthesisUtterance(text);
-            utterance.onend = function(event) {
-                startListening();
-            }
-            synth.speak(utterance);
-        }
-
-        function Send() {
-            isProcessingOrSpeaking = true;
-
-            var sQuestion = document.getElementById('txtMsg').value;
-            if (sQuestion == "") {
-                alert("Didn't catch that! Please speak again.");
-                return;
-            }
-
-            var oHttp = new XMLHttpRequest();
-            oHttp.open("POST", "https://api.openai.com/v1/chat/completions");
-            oHttp.setRequestHeader("Accept", "application/json");
-            oHttp.setRequestHeader("Content-Type", "application/json");
-            oHttp.setRequestHeader("Authorization", "Bearer " + getAPIKey());
-
-            oHttp.onreadystatechange = function() {
-                if (oHttp.readyState === 4) {
-                    if (document.getElementById('txtOutput').value !== "") document.getElementById('txtOutput').value += "\n";
-                    try {
-                        var oJson = JSON.parse(oHttp.responseText);
-                        var content = oJson.choices[0].message.content;
-                        speakText(content);
-
-                        mymessages.push({
-                            "role": "assistant",
-                            "content": content
-                        });
-
-                        document.getElementById('txtOutput').value += "Chat GPT: " + content;
-                        document.getElementById('txtMsg').value = ""; // Clear the hidden input
-
-                    } catch (ex) {
-                        document.getElementById('txtOutput').value += "Error: " + ex.message;
-                    }
-                    isProcessingOrSpeaking = false; // Resetting the flag after processing is done.
-                }
-            };
-
-            var sModel = "gpt-3.5-turbo"; // Or any other model you wish to use
-            mymessages.push({
-                "role": "user",
-                "content": sQuestion
-            });
-
-            var data = {
-                model: sModel,
-                messages: mymessages,
-            }
-            oHttp.send(JSON.stringify(data));
-
-            if (document.getElementById('txtOutput').value !== "") document.getElementById('txtOutput').value += "\n";
-            document.getElementById('txtOutput').value += "Me: " + sQuestion;
-        }
-    </script>
 </body>
 </html>
